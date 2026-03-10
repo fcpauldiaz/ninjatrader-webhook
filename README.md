@@ -20,30 +20,27 @@ TraderPost will POST to that URL; this app forwards the payload to Discord and s
 
 - Receives `POST /webhook`.
 - Forwards the incoming payload to `DISCORD_WEBHOOK_URL`.
-- Parses `content` as JSON to build a TraderPost order.
+- Parses execution lines in `content` (e.g. `**EXECUTION**: Long 2 MES 03-26 @ 6832.5 | Account: APEX...`) and sends that order to TraderPost; non-execution messages are forwarded to Discord only and TraderPost is skipped.
 - Sends the order to TraderPost by POSTing to `TRADERPOST_WEBHOOK_URL` (no API key).
 - Returns combined status for Discord and TraderPost:
   - `200` if both succeed
   - `207` if one succeeds
   - `502` if both fail
 
-## Payload Contract
+## Payload format
 
-Incoming payload must be Discord-compatible and include a `content` string containing JSON order data.
+Incoming payload is Discord-style: `content` (string) and optional `embeds`. Execution messages are detected by the pattern `**EXECUTION**: Long|Short <qty> <symbol> @ <price> | Account: <account_id>` and are parsed and sent to TraderPost; all payloads are forwarded to Discord as-is.
 
-Example logical payload:
+Example execution payload:
 
 ```json
 {
-  "content": "{\"symbol\":\"AAPL\",\"side\":\"buy\",\"quantity\":1,\"order_type\":\"market\"}",
-  "embeds": [
-    {
-      "title": "New order",
-      "description": "Forwarded from source system"
-    }
-  ]
+  "content": "🚀 **EXECUTION**: Long 2 MES 03-26 @ 6832.5 | Account: APEX19320000021",
+  "embeds": null
 }
 ```
+
+Other messages (e.g. `✅ **SUCCESS**: Connection established.`) are only forwarded to Discord; TraderPost is not called.
 
 ## Environment Variables
 
@@ -68,10 +65,7 @@ uvicorn app.main:app --reload
 ```bash
 curl -X POST "http://127.0.0.1:8000/webhook" \
   -H "Content-Type: application/json" \
-  -d '{
-    "content":"{\"symbol\":\"AAPL\",\"side\":\"buy\",\"quantity\":1,\"order_type\":\"market\",\"time_in_force\":\"day\"}",
-    "embeds":[{"title":"Order Signal","description":"Sending to Discord and TraderPost"}]
-  }'
+  -d '{"content":"🚀 **EXECUTION**: Long 2 MES 03-26 @ 6832.5 | Account: APEX19320000021","embeds":null}'
 ```
 
 ## Health Check

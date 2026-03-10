@@ -1,32 +1,31 @@
 from __future__ import annotations
 
-import json
-from json import JSONDecodeError
-from typing import cast
-
-from pydantic import ValidationError
+import re
+from typing import Literal
 
 from app.models import TraderPostOrder
 
+EXECUTION_PATTERN = re.compile(
+    r"\*\*EXECUTION\*\*:\s*(Long|Short)\s+(\d+)\s+(.+?)\s+@\s+([\d.]+)\s*\|\s*Account:\s*(\S+)",
+    re.IGNORECASE,
+)
 
-class OrderParsingError(ValueError):
-    pass
 
-
-def parse_order_from_content(content: str | None) -> TraderPostOrder:
-    if content is None or content.strip() == "":
-        raise OrderParsingError("Payload content is required and must contain JSON order data.")
-
-    try:
-        raw_data = json.loads(content)
-    except JSONDecodeError as exc:
-        raise OrderParsingError(f"Invalid JSON in content: {exc}") from exc
-
-    if not isinstance(raw_data, dict):
-        raise OrderParsingError("Order JSON must be an object.")
-
-    typed_data = cast(dict[str, object], raw_data)
-    try:
-        return TraderPostOrder.model_validate(typed_data)
-    except ValidationError as exc:
-        raise OrderParsingError(f"Order validation failed: {exc}") from exc
+def parse_execution_from_content(content: str | None) -> TraderPostOrder | None:
+    if content is None or not content.strip():
+        return None
+    match = EXECUTION_PATTERN.search(content.strip())
+    if not match:
+        return None
+    direction, qty_str, symbol, price_str, _ = match.groups()
+    side: Literal["buy", "sell"] = "buy" if direction.lower() == "long" else "sell"
+    quantity = float(qty_str)
+    price = float(price_str)
+    symbol = symbol.strip()
+    return TraderPostOrder(
+        symbol=symbol,
+        side=side,
+        quantity=quantity,
+        order_type="market",
+        limit_price=price,
+    )

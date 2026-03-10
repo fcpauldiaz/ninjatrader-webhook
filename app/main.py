@@ -11,7 +11,7 @@ from app.clients.discord_client import forward_to_discord
 from app.clients.traderpost_client import send_order_to_traderpost
 from app.config import get_settings
 from app.models import DestinationResult, WebhookPayload, WebhookResponse
-from app.services.order_parser import OrderParsingError, parse_order_from_content
+from app.services.order_parser import parse_execution_from_content
 
 app = FastAPI(title="Ninja Webhook Relay")
 logger = logging.getLogger(__name__)
@@ -45,21 +45,20 @@ async def webhook(payload: WebhookPayload) -> JSONResponse:
         )
     )
 
-    parsed_order = None
-    try:
-        parsed_order = parse_order_from_content(payload.content)
+    parsed_order = parse_execution_from_content(payload.content)
+    if parsed_order is not None:
         traderpost_result = await send_order_to_traderpost(
             webhook_url=settings.traderpost_webhook_url,
             order=parsed_order,
             timeout_seconds=settings.request_timeout_seconds,
         )
-    except OrderParsingError as exc:
+    else:
         traderpost_result = DestinationResult(
             destination="traderpost",
-            success=False,
+            success=True,
             status_code=None,
-            error=str(exc),
-            response_body=None,
+            error=None,
+            response_body="Skipped (not an execution message)",
         )
 
     discord_result = await discord_task
