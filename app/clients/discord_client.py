@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-from typing import cast
-
 import httpx
 
-from app.models import DestinationResult, JsonValue
+from app.models import DestinationResult
 
 
-def _get_response_body(response: httpx.Response) -> JsonValue:
+def _get_response_body(response: httpx.Response) -> object:
     content_type = response.headers.get("content-type", "")
     if "application/json" in content_type:
-        parsed = response.json()
-        return cast(JsonValue, parsed)
+        return response.json()
 
     text = response.text
     return text if text else None
@@ -19,7 +16,7 @@ def _get_response_body(response: httpx.Response) -> JsonValue:
 
 async def forward_to_discord(
     webhook_url: str,
-    payload: dict[str, JsonValue],
+    payload: dict[str, object],
     timeout_seconds: float,
 ) -> DestinationResult:
     try:

@@ -4,14 +4,10 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-JsonPrimitive = str | int | float | bool | None
-JsonValue = JsonPrimitive | list["JsonValue"] | dict[str, "JsonValue"]
-EmbedPayload = dict[str, JsonValue]
-
 
 class WebhookPayload(BaseModel):
     content: str | None = None
-    embeds: list[EmbedPayload] | None = None
+    embeds: list[dict[str, object]] | None = None
 
     model_config = ConfigDict(extra="allow")
 
@@ -35,7 +31,7 @@ class DestinationResult(BaseModel):
     success: bool
     status_code: int | None = None
     error: str | None = None
-    response_body: JsonValue | None = None
+    response_body: object | None = None
 
 
 class WebhookResponse(BaseModel):

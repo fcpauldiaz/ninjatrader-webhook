@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from app.clients.discord_client import forward_to_discord
 from app.clients.traderpost_client import send_order_to_traderpost
 from app.config import get_settings
-from app.models import DestinationResult, JsonValue, WebhookPayload, WebhookResponse
+from app.models import DestinationResult, WebhookPayload, WebhookResponse
 from app.services.order_parser import OrderParsingError, parse_order_from_content
 
 app = FastAPI(title="Ninja Webhook Relay")
@@ -32,7 +32,7 @@ async def health() -> dict[str, str]:
 async def webhook(payload: WebhookPayload) -> JSONResponse:
     settings = get_settings()
     raw_payload = cast(
-        dict[str, JsonValue],
+        dict[str, object],
         payload.model_dump(mode="json", exclude_none=False),
     )
     logger.info("Incoming payload: %s", raw_payload)

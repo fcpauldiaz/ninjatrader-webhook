@@ -6,7 +6,7 @@ from typing import cast
 
 from pydantic import ValidationError
 
-from app.models import JsonValue, TraderPostOrder
+from app.models import TraderPostOrder
 
 
 class OrderParsingError(ValueError):
@@ -25,7 +25,7 @@ def parse_order_from_content(content: str | None) -> TraderPostOrder:
     if not isinstance(raw_data, dict):
         raise OrderParsingError("Order JSON must be an object.")
 
-    typed_data = cast(dict[str, JsonValue], raw_data)
+    typed_data = cast(dict[str, object], raw_data)
     try:
         return TraderPostOrder.model_validate(typed_data)
     except ValidationError as exc:

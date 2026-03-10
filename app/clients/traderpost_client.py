@@ -4,14 +4,13 @@ from typing import cast
 
 import httpx
 
-from app.models import DestinationResult, JsonValue, TraderPostOrder
+from app.models import DestinationResult, TraderPostOrder
 
 
-def _get_response_body(response: httpx.Response) -> JsonValue:
+def _get_response_body(response: httpx.Response) -> object:
     content_type = response.headers.get("content-type", "")
     if "application/json" in content_type:
-        parsed = response.json()
-        return cast(JsonValue, parsed)
+        return response.json()
 
     text = response.text
     return text if text else None
@@ -22,7 +21,7 @@ async def send_order_to_traderpost(
     order: TraderPostOrder,
     timeout_seconds: float,
 ) -> DestinationResult:
-    payload = cast(dict[str, JsonValue], order.model_dump(exclude_none=True))
+    payload = cast(dict[str, object], order.model_dump(exclude_none=True))
     headers = {"Content-Type": "application/json"}
 
     try:
