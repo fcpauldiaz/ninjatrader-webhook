@@ -79,3 +79,15 @@ curl -X POST "http://127.0.0.1:8000/webhook" \
 ```bash
 curl "http://127.0.0.1:8000/health"
 ```
+
+## Deploy with Coolify (Nixpacks)
+
+1. In Coolify, create a new **Application** and connect this repo (GitHub/GitLab or public URL).
+2. Set **Build Pack** to **Nixpacks**. The repo includes a `nixpacks.toml` that runs:
+   - `uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}`
+3. **Port**: Set **Port Exposes** to `8000` (or the port your stack uses; Coolify may set `PORT` for you).
+4. **Environment**: Add the same variables as in `.env.example`:
+   - `DISCORD_WEBHOOK_URL`
+   - `TRADERPOST_WEBHOOK_URL`
+   - Optionally `REQUEST_TIMEOUT_SECONDS`, `LOG_LEVEL`
+5. Deploy. Your webhook URL will be `https://<your-coolify-domain>/webhook` — use that in TraderPost as the destination.
