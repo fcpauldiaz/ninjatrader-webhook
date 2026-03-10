@@ -49,9 +49,7 @@ async def webhook(payload: WebhookPayload) -> JSONResponse:
     try:
         parsed_order = parse_order_from_content(payload.content)
         traderpost_result = await send_order_to_traderpost(
-            base_url=settings.traderpost_base_url,
-            orders_path=settings.traderpost_orders_path,
-            api_key=settings.traderpost_api_key,
+            webhook_url=settings.traderpost_webhook_url,
             order=parsed_order,
             timeout_seconds=settings.request_timeout_seconds,
         )

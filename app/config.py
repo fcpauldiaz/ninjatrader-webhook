@@ -7,9 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     discord_webhook_url: str
-    traderpost_api_key: str
-    traderpost_base_url: str = "https://api.traderpost.io"
-    traderpost_orders_path: str = "/v1/orders"
+    traderpost_webhook_url: str
     request_timeout_seconds: float = Field(default=10.0, gt=0)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 

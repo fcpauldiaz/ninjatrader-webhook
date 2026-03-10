@@ -1,13 +1,27 @@
 # Ninja Webhook Relay
 
-FastAPI service that receives a webhook payload, forwards it to Discord, and submits an order to TraderPost.
+FastAPI service that receives a webhook payload (e.g. from TraderPost), forwards it to Discord, and submits the order to TraderPost via its webhook URL (no API key; the URL is the secret).
+
+## TraderPost webhook
+
+TraderPost sends webhooks to a URL you configure. Their webhook URLs look like:
+
+```
+https://webhooks.traderspost.io/trading/webhook/{webhook-id}/{token}
+```
+
+Deploy this app and set your **outgoing** webhook URL in TraderPost to your service:
+
+- **Webhook URL:** `https://<your-deployed-app>/webhook`
+
+TraderPost will POST to that URL; this app forwards the payload to Discord and sends the order to TraderPost by POSTing to your TraderPost webhook URL.
 
 ## Behavior
 
 - Receives `POST /webhook`.
 - Forwards the incoming payload to `DISCORD_WEBHOOK_URL`.
 - Parses `content` as JSON to build a TraderPost order.
-- Sends the order to TraderPost with bearer auth.
+- Sends the order to TraderPost by POSTing to `TRADERPOST_WEBHOOK_URL` (no API key).
 - Returns combined status for Discord and TraderPost:
   - `200` if both succeed
   - `207` if one succeeds
@@ -36,9 +50,7 @@ Example logical payload:
 Copy `.env.example` to `.env` and set values:
 
 - `DISCORD_WEBHOOK_URL`
-- `TRADERPOST_API_KEY`
-- `TRADERPOST_BASE_URL` (default: `https://api.traderpost.io`)
-- `TRADERPOST_ORDERS_PATH` (default: `/v1/orders`)
+- `TRADERPOST_WEBHOOK_URL` (e.g. `https://webhooks.traderspost.io/trading/webhook/{id}/{token}`)
 - `REQUEST_TIMEOUT_SECONDS` (default: `10`)
 - `LOG_LEVEL` (default: `INFO`)
 
